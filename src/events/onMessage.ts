@@ -10,37 +10,28 @@ export const execute = async (message: Message) => {
         if (message.channel.name.includes("gm") && message.content.toLowerCase().includes('gm')) {
             const gms = getGmCount(message.author.id, message.channel.id);
             const lastGm = new Date(gms.lastGm).getTime();
-            // allow 1 gm every 24 hours
-            if (new Date().getTime() - lastGm < 24 * 60 * 60 * 1000) {
-                message.reply({ content: "You can say gm once every 24 hours" }).then(msg => {
-                    setTimeout(() => {
-                        if (msg.deletable) {
-                            msg.delete();
-                        } else {
-                            console.log("Message is not deletable");
-                        }
-                    }, 5000);
-                });
-                return;
-            }
-            const deleteTime = new Date(new Date().getTime() + 6000).getTime();
-            const messageContent = `gm <@${message.author.id}>
+            const currentTime = new Date().getTime();
+            const daysSinceLastGm = Math.floor((currentTime - lastGm) / (24 * 60 * 60 * 1000));
+            const streakUpdated = gms.updatedToday;
+
+            const streak = streakUpdated ? gms.streak :
+                daysSinceLastGm > 1 ? 1 :
+                    gms.streak + 1;
+            let messageContent = `gm <@${message.author.id}>
 
 Your last gm was <t:${Math.floor(lastGm / 1000)}:R>
-You have said gm \`${gms.total + 1}\` times [Week: \`${gms.gmsThisWeek + 1}\` | Month: \`${gms.gmsThisMonth + 1}\` | Year: \`${gms.gmsThisYear + 1}\`]
-Total gms: \`${gms.total}\`
+Current streak: \`${gms.streak}\` days 🔥`
 
-_This message will self-destruct in <t:${Math.floor(deleteTime / 1000)}:R>_ 🧃`;
-            incrementGmCount(message.author.id, message.channel.id);
-            message.reply({ content: messageContent }).then(msg => {
-                setTimeout(() => {
-                    if (msg.deletable) {
-                        msg.delete();
-                    } else {
-                        console.log("Message is not deletable");
-                    }
-                }, 5000);
-            });
+            if (streakUpdated) {
+                messageContent += `\n_You have already said gm today_`
+            }
+
+
+
+            incrementGmCount(message.author.id, message.channel.id, streak);
+            const reply = await message.reply(messageContent);
+            setTimeout(() => reply.delete(), 5000);
         }
     }
 };
+// You have said gm \`${gms.total + 1}\` times [Week: \`${gms.gmsThisWeek + 1}\` | Month: \`${gms.gmsThisMonth + 1}\` | Year: \`${gms.gmsThisYear + 1}\`]`;
