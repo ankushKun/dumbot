@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'url';
 import { loadState } from './utils/state.js';
-
+import './deploy-commands.js';
 loadState();
 
 // Add type for the extended Client

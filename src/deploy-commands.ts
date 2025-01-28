@@ -4,6 +4,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 dotenv.config();
+const servers = [1229716789840052276]
 
 const commands = [];
 // const __filename = fileURLToPath(import.meta.url);
@@ -33,6 +34,12 @@ try {
         Routes.applicationCommands(process.env.CLIENT_ID as string),
         { body: commands },
     );
+    // for (const server of servers) {
+    //     await rest.put(
+    //         Routes.applicationGuildCommands(process.env.CLIENT_ID as string, server.toString()),
+    //         { body: commands },
+    //     );
+    // }
 
     console.log('Successfully reloaded application (/) commands.');
 } catch (error) {

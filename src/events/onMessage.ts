@@ -9,6 +9,7 @@ export const execute = async (message: Message) => {
     if (message.channel.type === ChannelType.GuildText) {
         if (message.channel.name.includes("gm") && message.content.toLowerCase().includes('gm')) {
             const gms = getGmCount(message.author.id, message.channel.id);
+            console.log(gms);
             const lastGm = new Date(gms.lastGm).getTime();
             const currentTime = new Date().getTime();
             const daysSinceLastGm = Math.floor((currentTime - lastGm) / (24 * 60 * 60 * 1000));
@@ -20,10 +21,10 @@ export const execute = async (message: Message) => {
             let messageContent = `gm <@${message.author.id}>
 
 Your last gm was <t:${Math.floor(lastGm / 1000)}:R>
-Current streak: \`${gms.streak}\` days 🔥`
+Current streak: \`${gms.streak}\` days 🔥`;
 
             if (streakUpdated) {
-                messageContent += `\n_You have already said gm today_`
+                messageContent += `\n\n_You have already said gm today_`
             }
 
 

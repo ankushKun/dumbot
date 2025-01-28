@@ -1,19 +1,19 @@
 import fs from 'fs';
 
+interface UserGmCount {
+    total: number;
+    lastGm: Date;
+    gmsThisWeek: number;
+    gmsThisMonth: number;
+    gmsThisYear: number;
+    streak: number;
+    updatedToday: boolean;
+}
+
 interface State {
     totalGms: number;
     gmCount: {
-        [userId: string]: {
-            [channelId: string]: {
-                total: number;
-                lastGm: Date;
-                gmsThisWeek: number;
-                gmsThisMonth: number;
-                gmsThisYear: number;
-                streak: number;
-                updatedToday: boolean;
-            };
-        };
+        [userId: string]: UserGmCount;
     };
 }
 
@@ -36,39 +36,39 @@ export function saveState() {
 
 ///////////////////////////////////////////
 
+export function top10gmStreak() {
+    const sorted = Object.entries(state.gmCount).sort((a: [string, UserGmCount], b: [string, UserGmCount]) => b[1].streak - a[1].streak);
+    return sorted.slice(0, 10);
+}
+
 export function getGmCount(userId: string, channelId: string) {
     if (!state.gmCount[userId]) {
-        state.gmCount[userId] = {};
+        return { total: 0, lastGm: new Date(), gmsThisWeek: 0, gmsThisMonth: 0, gmsThisYear: 0, streak: 0, updatedToday: false };
     }
-    if (!state.gmCount[userId][channelId]) {
-        state.gmCount[userId][channelId] = { total: 0, lastGm: new Date(), gmsThisWeek: 0, gmsThisMonth: 0, gmsThisYear: 0, streak: 1, updatedToday: false };
-    }
-    const gmCount = state.gmCount[userId][channelId];
+    const gmCount = state.gmCount[userId];
     gmCount.updatedToday = new Date(gmCount.lastGm).getDate() == new Date().getDate();
     return { ...gmCount, total: state.totalGms || 0 };
 }
 
 export function incrementGmCount(userId: string, channelId: string, streak: number) {
     if (!state.gmCount[userId]) {
-        state.gmCount[userId] = {};
+        state.gmCount[userId] = { total: 0, lastGm: new Date(), gmsThisWeek: 0, gmsThisMonth: 0, gmsThisYear: 0, streak: 1, updatedToday: true };
     }
-    if (!state.gmCount[userId][channelId]) {
-        state.gmCount[userId][channelId] = { total: 0, lastGm: new Date(), gmsThisWeek: 0, gmsThisMonth: 0, gmsThisYear: 0, streak: 1, updatedToday: true };
-    }
+
     if (!state.totalGms) {
         state.totalGms = 0;
     }
 
-    const isUpdatedToday = (new Date(state.gmCount[userId][channelId].lastGm)).getDate() == new Date().getDate();
+    const isUpdatedToday = (new Date(state.gmCount[userId].lastGm)).getDate() == new Date().getDate();
 
-    state.gmCount[userId][channelId].total++;
-    state.gmCount[userId][channelId].lastGm = new Date();
-    state.gmCount[userId][channelId].gmsThisWeek++;
-    state.gmCount[userId][channelId].gmsThisMonth++;
-    state.gmCount[userId][channelId].gmsThisYear++;
+    state.gmCount[userId].total++;
+    state.gmCount[userId].lastGm = new Date();
+    state.gmCount[userId].gmsThisWeek++;
+    state.gmCount[userId].gmsThisMonth++;
+    state.gmCount[userId].gmsThisYear++;
     state.totalGms++;
-    state.gmCount[userId][channelId].streak = streak;
-    state.gmCount[userId][channelId].updatedToday = isUpdatedToday;
+    state.gmCount[userId].streak = streak;
+    state.gmCount[userId].updatedToday = isUpdatedToday;
     saveState();
 }
 
@@ -76,9 +76,7 @@ export function incrementGmCount(userId: string, channelId: string, streak: numb
 
 export function resetWeeklyGmCount() {
     for (const userId in state.gmCount) {
-        for (const channelId in state.gmCount[userId]) {
-            state.gmCount[userId][channelId].gmsThisWeek = 0;
-        }
+        state.gmCount[userId].gmsThisWeek = 0;
     }
     console.log("Weekly reset");
     saveState();
@@ -86,9 +84,7 @@ export function resetWeeklyGmCount() {
 
 export function resetMonthlyGmCount() {
     for (const userId in state.gmCount) {
-        for (const channelId in state.gmCount[userId]) {
-            state.gmCount[userId][channelId].gmsThisMonth = 0;
-        }
+        state.gmCount[userId].gmsThisMonth = 0;
     }
     console.log("Monthly reset");
     saveState();
@@ -96,9 +92,7 @@ export function resetMonthlyGmCount() {
 
 export function resetYearlyGmCount() {
     for (const userId in state.gmCount) {
-        for (const channelId in state.gmCount[userId]) {
-            state.gmCount[userId][channelId].gmsThisYear = 0;
-        }
+        state.gmCount[userId].gmsThisYear = 0;
     }
     console.log("Yearly reset");
     saveState();
