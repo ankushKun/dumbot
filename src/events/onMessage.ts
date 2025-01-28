@@ -21,7 +21,7 @@ export const execute = async (message: Message) => {
             let messageContent = `gm <@${message.author.id}>
 
 Your last gm was <t:${Math.floor(lastGm / 1000)}:R>
-Current streak: \`${gms.streak}\` days 🔥`;
+Current streak: \`${streak}\` days 🔥`;
 
             if (streakUpdated) {
                 messageContent += `\n\n_You have already said gm today_`
