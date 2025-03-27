@@ -1,4 +1,4 @@
-import { ChatInputCommandInteraction, SlashCommandBuilder } from 'discord.js';
+import { ChatInputCommandInteraction, EmbedBuilder, SlashCommandBuilder } from 'discord.js';
 import { getGmCount } from '../utils/state.js';
 
 export const data = new SlashCommandBuilder()
@@ -8,17 +8,28 @@ export const data = new SlashCommandBuilder()
 
 export const execute = async (interaction: ChatInputCommandInteraction) => {
     const user = interaction.options.getUser('user') || interaction.user;
-    const otherUser = interaction.options.getUser('user') as any as boolean;
+    const isOtherUser = interaction.options.getUser('user') !== null;
 
     const gms = getGmCount(user.id, interaction.channelId);
-    await interaction.reply(`${otherUser ? `${user.displayName} has` : 'You have'} said gm \`${gms.total}\` times
+    const lastGmTimestamp = Math.floor(new Date(gms.lastGm).getTime() / 1000);
 
-gms this week: \`${gms.gmsThisWeek}\`
-gms this month: \`${gms.gmsThisMonth}\`
-gms this year: \`${gms.gmsThisYear}\`
+    const embed = new EmbedBuilder()
+        .setTitle(`${isOtherUser ? `${user.displayName}'s` : 'Your'} GM Statistics`)
+        .setColor('#FFD700')
+        .addFields(
+            { name: 'Total GMs', value: `\`${gms.total}\` times`, inline: true },
+            { name: 'Current Streak', value: `\`${gms.streak}\` days 🔥`, inline: true },
+            { name: 'Last GM', value: `<t:${lastGmTimestamp}:R>`, inline: true },
+            { name: 'Weekly GMs', value: `\`${gms.gmsThisWeek}\` times`, inline: true },
+            { name: 'Monthly GMs', value: `\`${gms.gmsThisMonth}\` times`, inline: true },
+            { name: 'Yearly GMs', value: `\`${gms.gmsThisYear}\` times`, inline: true }
+        )
+        .setFooter({ text: gms.updatedToday ? `${isOtherUser ? `${user.displayName} has` : 'You have'} already said gm today` : 'Say gm every day to increase your streak!' })
+        .setTimestamp();
 
-${otherUser ? `${user.displayName}'s last gm was` : 'Your last gm was'} <t:${Math.floor(new Date(gms.lastGm).getTime() / 1000)}:R>
-${otherUser ? `${user.displayName}'s current streak is` : 'Your current streak is'} \`${gms.streak}\` days 🔥
+    if (user.displayAvatarURL()) {
+        embed.setThumbnail(user.displayAvatarURL());
+    }
 
-${gms.updatedToday ? `_${otherUser ? `${user.displayName} has` : 'You have'} already said gm today_` : ''}`);
+    await interaction.reply({ embeds: [embed] });
 };

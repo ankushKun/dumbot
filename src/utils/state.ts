@@ -37,7 +37,17 @@ export function saveState() {
 ///////////////////////////////////////////
 
 export function top10gmStreak() {
-    const sorted = Object.entries(state.gmCount).sort((a: [string, UserGmCount], b: [string, UserGmCount]) => b[1].streak - a[1].streak);
+    // Filter out users with zero or undefined streaks
+    const validUsers = Object.entries(state.gmCount).filter(
+        ([_, gmCount]) => gmCount.streak && gmCount.streak > 0
+    );
+
+    // Sort by streak (highest first)
+    const sorted = validUsers.sort(
+        (a: [string, UserGmCount], b: [string, UserGmCount]) => b[1].streak - a[1].streak
+    );
+
+    // Return top 10
     return sorted.slice(0, 10);
 }
 
@@ -46,8 +56,10 @@ export function getGmCount(userId: string, channelId: string) {
         return { total: 0, lastGm: new Date(), gmsThisWeek: 0, gmsThisMonth: 0, gmsThisYear: 0, streak: 0, updatedToday: false };
     }
     const gmCount = state.gmCount[userId];
-    gmCount.updatedToday = new Date(gmCount.lastGm).getDate() == new Date().getDate();
-    return { ...gmCount, total: state.totalGms || 0 };
+    gmCount.updatedToday = new Date(gmCount.lastGm).getDate() === new Date().getDate() &&
+        new Date(gmCount.lastGm).getMonth() === new Date().getMonth() &&
+        new Date(gmCount.lastGm).getFullYear() === new Date().getFullYear();
+    return { ...gmCount };
 }
 
 export function incrementGmCount(userId: string, channelId: string, streak: number) {
@@ -59,16 +71,24 @@ export function incrementGmCount(userId: string, channelId: string, streak: numb
         state.totalGms = 0;
     }
 
-    const isUpdatedToday = (new Date(state.gmCount[userId].lastGm)).getDate() == new Date().getDate();
+    const today = new Date();
+    const lastGmDate = new Date(state.gmCount[userId].lastGm);
+    const isUpdatedToday = lastGmDate.getDate() === today.getDate() &&
+        lastGmDate.getMonth() === today.getMonth() &&
+        lastGmDate.getFullYear() === today.getFullYear();
 
-    state.gmCount[userId].total++;
+    // Only increment counts if not already updated today
+    if (!isUpdatedToday) {
+        state.gmCount[userId].total++;
+        state.gmCount[userId].gmsThisWeek++;
+        state.gmCount[userId].gmsThisMonth++;
+        state.gmCount[userId].gmsThisYear++;
+        state.totalGms++;
+    }
+
     state.gmCount[userId].lastGm = new Date();
-    state.gmCount[userId].gmsThisWeek++;
-    state.gmCount[userId].gmsThisMonth++;
-    state.gmCount[userId].gmsThisYear++;
-    state.totalGms++;
     state.gmCount[userId].streak = streak;
-    state.gmCount[userId].updatedToday = isUpdatedToday;
+    state.gmCount[userId].updatedToday = true;
     saveState();
 }
 

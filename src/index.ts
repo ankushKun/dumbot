@@ -5,7 +5,14 @@ import path from 'node:path';
 import { fileURLToPath } from 'url';
 import { loadState } from './utils/state.js';
 import './deploy-commands.js';
+
+// Initialize state first
+console.log("Initializing state...");
 loadState();
+
+// Set up cron jobs for periodic resets
+console.log("Setting up scheduled tasks...");
+import './utils/cron.js';
 
 // Add type for the extended Client
 declare module 'discord.js' {
